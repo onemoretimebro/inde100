@@ -1,1 +1,1 @@
-streamlit-javascript
+streamlit-geolocation
