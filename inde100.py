@@ -8,8 +8,25 @@ FLASK_SERVER_URL = "indecence.ddns.net:5000/upload"  # Remplace par ton IP publi
 
 st.title("Capture d'image avec caméra arrière et envoi au serveur Flask")
 
-# Obtenir la localisation de l'utilisateur
-loc = geolocation()
+# Fonction JavaScript pour récupérer la géolocalisation du navigateur
+st.markdown("""
+    <script>
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            const coords = {
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude
+            };
+            document.dispatchEvent(new CustomEvent("geolocation_received", {detail: coords}));
+        },
+        (error) => {
+            document.dispatchEvent(new CustomEvent("geolocation_error", {detail: error.message}));
+        });
+    </script>
+""", unsafe_allow_html=True)
+
+# Récupération de la géolocalisation envoyée par JavaScript
+loc = st.experimental_get_query_params()
 
 # Fonction pour capturer l'image
 def capture_image():
@@ -28,21 +45,17 @@ if st.button('Commencer la capture automatique'):
     while True:
         image = capture_image()
         if image:
-            # Récupérer la localisation
+            # Vérifier si la localisation est récupérée via JavaScript
             if loc:
-                lat = loc['coords']['latitude']
-                lon = loc['coords']['longitude']
+                lat = loc.get("latitude", ["Non disponible"])[0]
+                lon = loc.get("longitude", ["Non disponible"])[0]
             else:
                 st.warning("La localisation n'a pas été autorisée ou n'est pas disponible.")
-                lat, lon = None, None
+                lat, lon = "Non disponible", "Non disponible"
 
             # Préparer les données pour l'envoi
             files = {"file": image.getvalue()}
-            data = {}
-            if lat and lon:
-                data = {"latitude": lat, "longitude": lon}
-            else:
-                data = {"latitude": "Non disponible", "longitude": "Non disponible"}
+            data = {"latitude": lat, "longitude": lon}
 
             # Envoi de l'image au serveur Flask
             response = requests.post(FLASK_SERVER_URL, files=files, data=data)
