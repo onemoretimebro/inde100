@@ -1,8 +1,7 @@
 import streamlit as st
 import requests
 import time
-from geopy.geocoders import Nominatim
-from streamlit_javascript import st_javascript
+from streamlit_geolocation import geolocation 
 
 # URL de l'API Flask
 FLASK_SERVER_URL = "indecence.ddns.net:5000/upload"  # Remplace par ton IP publique ou ton domaine DynDNS
