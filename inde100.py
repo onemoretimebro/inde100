@@ -1,55 +1,41 @@
 import streamlit as st
+import requests
+import time
+from geopy.geocoders import Nominatim
 
-# URL de ton serveur où envoyer l'image
-server_url = "http://192.168.1.3:5000/upload"
+# URL de l'API Flask
+FLASK_SERVER_URL = "indecence.ddns.net:5000/upload"  # Remplace par ton IP publique ou ton domaine DynDNS
 
-# JavaScript pour capturer l'image de la caméra toutes les 3 secondes et l'envoyer au serveur
-camera_access_script = f"""
-<script>
-async function startCamera() {{
-    // Demander l'accès à la caméra arrière
-    const videoStream = await navigator.mediaDevices.getUserMedia({{ 
-        video: {{ facingMode: "environment" }}, 
-        audio: false 
-    }});
+st.title("Capture d'image avec caméra arrière et envoi au serveur Flask")
 
-    const video = document.querySelector('video');
-    video.srcObject = videoStream;
+# Fonction pour capturer une image de la caméra arrière
+def capture_image():
+    st.text("Demande d'accès à la caméra arrière et à la localisation...")
+    
+    # Accès à la caméra arrière
+    image = st.camera_input("Prendre une photo avec la caméra arrière")
+    
+    # Accès à la localisation
+    geolocator = Nominatim(user_agent="geoapiExercises")
+    location = geolocator.geocode("Paris, France")  # Remplace par ta méthode de localisation réelle si nécessaire
+    
+    if image:
+        # Affiche l'image
+        st.image(image, caption="Image capturée", use_column_width=True)
+        return image, location.latitude, location.longitude
+    return None, None, None
 
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
+# Boucle pour capturer l'image toutes les 3 secondes
+while True:
+    image, lat, lon = capture_image()
+    if image:
+        # Envoi de l'image au serveur Flask
+        files = {"file": image.getvalue()}
+        data = {"latitude": lat, "longitude": lon}
+        
+        response = requests.post(FLASK_SERVER_URL, files=files, data=data)
+        st.write(response.text)
+    
+    # Attendre 3 secondes avant la prochaine capture
+    time.sleep(3)
 
-    // Capturer une image toutes les 3 secondes et l'envoyer au serveur
-    setInterval(() => {{
-        // Configurer le canvas pour la capture de l'image
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-
-        // Dessiner la vidéo sur le canvas (capturer l'image)
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-        // Convertir l'image capturée en données base64
-        const imageData = canvas.toDataURL('image/jpeg');
-
-        // Envoyer l'image au serveur via une requête POST
-        fetch("{server_url}", {{
-            method: "POST",
-            body: JSON.stringify({{ image: imageData }}),
-            headers: {{
-                "Content-Type": "application/json"
-            }}
-        }}).then(response => response.text())
-          .then(data => {{
-              console.log('Réponse du serveur:', data);
-          }})
-          .catch((error) => {{
-              console.error('Erreur lors de l\'envoi de l\'image:', error);
-          }});
-    }}, 3000);  // Capture et envoie toutes les 3 secondes
-}}
-
-startCamera();
-</script>
-
-<video autoplay style="width:100%"></video>
-st.write(camera_access_script, unsafe_allow_html=True)
