@@ -9,47 +9,34 @@ FLASK_SERVER_URL = "indecence.ddns.net:5000/upload"  # Remplace par ton IP publi
 
 st.title("Capture d'image avec caméra arrière et envoi au serveur Flask")
 
+# Obtenir la localisation de l'utilisateur
+loc = geolocation()
 
-# Fonction pour capturer l'image et la localisation
+# Fonction pour capturer l'image
 def capture_image():
-    st.text("Demande d'accès à la caméra arrière et à la localisation...")
-
-    # Accès à la caméra arrière
+    st.text("Demande d'accès à la caméra arrière...")
     image = st.camera_input("Prendre une photo avec la caméra arrière")
 
-    # Obtenir la localisation via JavaScript
-    location = st_javascript(
-        """
-        async function getLocation() {
-            if (navigator.geolocation) {
-                const position = await new Promise((resolve, reject) => {
-                    navigator.geolocation.getCurrentPosition(resolve, reject);
-                });
-                return position.coords;
-            } else {
-                return null;
-            }
-        }
-        getLocation();
-        """
-    )
-
-    if image and location:
-        # Afficher l'image
+    if image:
         st.image(image, caption="Image capturée", use_column_width=True)
-        return image, location['latitude'], location['longitude']
-    elif image:
-        st.warning("La localisation n'a pas été autorisée ou n'est pas disponible.")
-        return image, None, None
+        return image
     else:
-        return None, None, None
+        return None
 
 # Bouton pour démarrer la capture automatique
 if st.button('Commencer la capture automatique'):
     st.write("Capture et envoi des images toutes les 3 secondes...")
     while True:
-        image, lat, lon = capture_image()
+        image = capture_image()
         if image:
+            # Récupérer la localisation
+            if loc:
+                lat = loc['coords']['latitude']
+                lon = loc['coords']['longitude']
+            else:
+                st.warning("La localisation n'a pas été autorisée ou n'est pas disponible.")
+                lat, lon = None, None
+
             # Préparer les données pour l'envoi
             files = {"file": image.getvalue()}
             data = {}
