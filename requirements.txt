@@ -1,1 +1,1 @@
-geopy
+streamlit-javascript
