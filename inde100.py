@@ -4,7 +4,7 @@ import time
 
 
 # URL de l'API Flask
-FLASK_SERVER_URL = "indecence.ddns.net:5000/upload"  # Remplace par ton IP publique ou ton domaine DynDNS
+FLASK_SERVER_URL = "indecence.ddns.net:8080/upload"  # Remplace par ton IP publique ou ton domaine DynDNS
 
 # Fonction pour capturer l'image
 def capture_image():
