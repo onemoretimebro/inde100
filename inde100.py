@@ -1,3 +1,6 @@
+import eventlet
+eventlet.monkey_patch()  # Doit être appelé avant tout autre import
+
 from flask import Flask, render_template
 from flask_socketio import SocketIO
 import requests
@@ -19,13 +22,15 @@ def handle_connect():
 @socketio.on('keyword_detected')
 def handle_keyword_detected(data):
     print(f"Mot-clé détecté par un client : {data['message']}")
-    
+
     latitude = data['latitude']
     longitude = data['longitude']
-    
-    # Conversion des coordonnées en adresse
-    address = get_address(latitude, longitude)
-    
+
+    # Encapsuler l'appel de la fonction dans le contexte de l'application
+    with app.app_context():
+        # Conversion des coordonnées en adresse
+        address = get_address(latitude, longitude)
+
     # Émettre l'adresse formatée à tous les clients connectés
     socketio.emit('notify_clients', {'address': address})
 
@@ -65,12 +70,11 @@ def get_address(latitude, longitude, retry=0):
             return "Erreur dans la récupération de l'adresse"
 
 
-
-
 @socketio.on('location_update')
 def handle_location_update(data):
     print(f"Localisation reçue : Latitude {data['latitude']}, Longitude {data['longitude']}")
 
 if __name__ == '__main__':
     # Flask écoute sur toutes les interfaces pour être accessible depuis d'autres appareils du réseau local
-    socketio.run(app, debug=True)
+    socketio.run(app, host='0.0.0.0', debug=True)
+
