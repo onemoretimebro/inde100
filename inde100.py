@@ -33,7 +33,7 @@ def handle_keyword_detected(data):
 def get_address(latitude, longitude, retry=0):
     try:
         headers = {
-            'User-Agent': 'MonApplication/1.0 (http://mon-application.com)'  
+            'User-Agent': 'inde100/1.0 (https://inde100-lcm8.onrender.com/)'  
         }
         response = requests.get(
             f'https://nominatim.openstreetmap.org/reverse?lat={latitude}&lon={longitude}&format=json',
