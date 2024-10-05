@@ -80,4 +80,4 @@ def handle_location_update(data):
 
 if __name__ == '__main__':
     # Flask écoute sur toutes les interfaces pour être accessible depuis d'autres appareils du réseau local
-    socketio.run(app, host='0.0.0.0', debug=True)
+    socketio.run(app, debug=True)
