@@ -30,47 +30,40 @@ def handle_keyword_detected(data):
     socketio.emit('notify_clients', {'address': address})
 
 
-def get_address(latitude, longitude):
+def get_address(latitude, longitude, retry=0):
     try:
         headers = {
-            'User-Agent': 'MonApplication/1.0 (http://mon-application.com)'  # Remplacez par votre URL
+            'User-Agent': 'MonApplication/1.0 (http://mon-application.com)'  
         }
         response = requests.get(
             f'https://nominatim.openstreetmap.org/reverse?lat={latitude}&lon={longitude}&format=json',
             headers=headers
         )
 
-        print("Réponse brute de l'API:", response.text)  # Afficher la réponse brute
-
         if response.status_code == 200:
             data = response.json()
-            print("Données de l'adresse :", data)  # Afficher les données JSON
-            
-            # Extraire les éléments souhaités
             address_parts = []
-            
-            # Ajout des parties de l'adresse spécifiques que vous souhaitez
             if 'house_number' in data['address']:
-                address_parts.append(data['address']['house_number'])  # Numéro de la maison
+                address_parts.append(data['address']['house_number'])
             if 'road' in data['address']:
-                address_parts.append(data['address']['road'])  # Rue
+                address_parts.append(data['address']['road'])
             if 'hamlet' in data['address']:
-                address_parts.append(data['address']['hamlet'])  # Petit hameau
+                address_parts.append(data['address']['hamlet'])
             if 'suburb' in data['address']:
-                address_parts.append(data['address']['suburb'])  # Quartier
-
-            # Vérification si des parties d'adresse ont été ajoutées
-            print("Parties d'adresse extraites :", address_parts)
-            
-            # Construire l'adresse formatée
-            formatted_address = ', '.join(address_parts)
-            return formatted_address if formatted_address else "Adresse inconnue"
+                address_parts.append(data['address']['suburb'])
+            return ', '.join(address_parts) if address_parts else "Adresse inconnue"
         else:
-            print(f"Erreur HTTP : {response.status_code} - {response.text}")
+            print(f"Erreur HTTP : {response.status_code}")
             return "Erreur dans la récupération de l'adresse"
+    
     except Exception as e:
-        print(f"Erreur lors de la récupération de l'adresse : {e}")
-        return "Erreur dans la récupération de l'adresse"
+        if retry < 3:  # Limite de réessai
+            print(f"Erreur, nouvelle tentative ({retry + 1})")
+            return get_address(latitude, longitude, retry=retry+1)
+        else:
+            print(f"Erreur lors de la récupération de l'adresse : {e}")
+            return "Erreur dans la récupération de l'adresse"
+
 
 
 
