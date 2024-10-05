@@ -1,5 +1,5 @@
 import eventlet
-eventlet.monkey_patch()  # Doit être appelé avant tout autre import
+eventlet.monkey_patch()  # Assurez-vous que ceci est exécuté en premier
 
 from flask import Flask, render_template
 from flask_socketio import SocketIO
@@ -8,7 +8,7 @@ import requests
 app = Flask(__name__)
 socketio = SocketIO(app)
 
-# Liste pour stocker les adresses
+# Liste pour stocker les adresses détectées
 addresses = []
 
 @app.route('/')
@@ -18,19 +18,21 @@ def index():
 @socketio.on('connect')
 def handle_connect():
     print("Un utilisateur s'est connecté.")
+    # Envoyer toutes les adresses précédemment détectées à ce nouvel utilisateur
+    for address in addresses:
+        socketio.emit('notify_clients', {'address': address})
 
 @socketio.on('keyword_detected')
 def handle_keyword_detected(data):
     print(f"Mot-clé détecté par un client : {data['message']}")
-
+    
     latitude = data['latitude']
     longitude = data['longitude']
-
-    # Encapsuler l'appel de la fonction dans le contexte de l'application
-    with app.app_context():
-        # Conversion des coordonnées en adresse
-        address = get_address(latitude, longitude)
-
+    
+    # Conversion des coordonnées en adresse
+    address = get_address(latitude, longitude)
+    addresses.append(address)  # Enregistrer l'adresse dans la liste
+    
     # Émettre l'adresse formatée à tous les clients connectés
     socketio.emit('notify_clients', {'address': address})
 
@@ -69,12 +71,12 @@ def get_address(latitude, longitude, retry=0):
             print(f"Erreur lors de la récupération de l'adresse : {e}")
             return "Erreur dans la récupération de l'adresse"
 
-
 @socketio.on('location_update')
 def handle_location_update(data):
     print(f"Localisation reçue : Latitude {data['latitude']}, Longitude {data['longitude']}")
 
 if __name__ == '__main__':
     # Flask écoute sur toutes les interfaces pour être accessible depuis d'autres appareils du réseau local
-    socketio.run(app, host='0.0.0.0', port=50000, debug=True)
+    socketio.run(app, port=50000, debug=True)
+
 
