@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: inde100
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python inde100.py
