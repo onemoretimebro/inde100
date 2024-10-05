@@ -1,1 +1,1 @@
-socketio
+streamlit-js-eval
