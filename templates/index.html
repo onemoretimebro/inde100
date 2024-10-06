@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
     <style>
-        /* Styles de base pour le design */
         body {
             font-family: Arial, sans-serif;
             margin: 0;
@@ -123,18 +122,17 @@
         addressContainer.appendChild(newAddress);
     });
 
-    // Fonction pour effacer le stockage local tous les jours à minuit
     function clearLocalStorageAtMidnight() {
         const now = new Date();
         const midnight = new Date();
-        midnight.setHours(24, 0, 0, 0); // Minuit
+        midnight.setHours(24, 0, 0, 0);
 
         const timeUntilMidnight = midnight.getTime() - now.getTime();
 
         setTimeout(() => {
-            localStorage.clear(); // Effacer le stockage local
+            localStorage.clear();
             console.log("Le stockage local a été effacé.");
-            clearLocalStorageAtMidnight(); // Relancer la fonction
+            clearLocalStorageAtMidnight();
         }, timeUntilMidnight);
     }
 
@@ -143,4 +141,3 @@
 
 </body>
 </html>
-
