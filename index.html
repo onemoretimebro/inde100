@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
     <style>
-        /* Styles de base pour le design */
         body {
             font-family: Arial, sans-serif;
             margin: 0;
@@ -65,8 +64,11 @@
 <script>
     const socket = io(); // Connexion au serveur Socket.IO
 
+    let recognition; // Déclarer la variable globalement
+
     document.getElementById('start-recognition').onclick = function() {
         getLocation(); // Récupérer la localisation de l'utilisateur
+        startRecognition(); // Démarrer la reconnaissance vocale
     };
 
     // Fonction pour obtenir la position de l'utilisateur
@@ -86,32 +88,42 @@
 
         // Émettre les coordonnées au serveur
         socket.emit('location_data', { latitude: latitude, longitude: longitude });
+    }
 
-        // Démarrer la reconnaissance vocale
-        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    function startRecognition() {
+        recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
         recognition.lang = 'fr-FR';
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
 
+        // Fonction déclenchée lorsqu'un résultat est détecté
         recognition.onresult = function(event) {
             const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
             console.log("Reconnaissance : " + transcript);
 
             if (transcript.includes("les poulets")) {
                 console.log("Mot-clé détecté !");
-                // Émettre la détection du mot-clé vers le serveur avec les coordonnées
+                // Émettre la détection du mot-clé vers le serveur
                 socket.emit('keyword_detected', {
                     message: "Le mot-clé a été détecté par un utilisateur !",
-                    latitude: latitude,
-                    longitude: longitude
                 });
             }
         };
 
-        // Redémarrer la reconnaissance vocale en cas d'arrêt
+        // Quand la reconnaissance vocale est terminée, redémarrer pour continuer l'écoute
         recognition.onend = function() {
-            recognition.start();
+            console.log("Redémarrage de la reconnaissance vocale...");
+            recognition.start();  // Redémarrer la reconnaissance
         };
 
-        recognition.start();
+        // Gestion des erreurs
+        recognition.onerror = function(event) {
+            console.error("Erreur de reconnaissance vocale : ", event.error);
+            recognition.stop(); // Arrêter en cas d'erreur
+            setTimeout(startRecognition, 1000); // Redémarrer après une seconde
+        };
+
+        recognition.start(); // Démarrer la reconnaissance vocale
     }
 
     function handleError(error) {
@@ -148,3 +160,4 @@
 
 </body>
 </html>
+
