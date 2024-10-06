@@ -54,8 +54,6 @@ def get_address(latitude, longitude, retry=0):
                 address_parts.append(data['address']['house_number'])
             if 'road' in data['address']:
                 address_parts.append(data['address']['road'])
-            if 'hamlet' in data['address']:
-                address_parts.append(data['address']['hamlet'])
             if 'suburb' in data['address']:
                 address_parts.append(data['address']['suburb'])
             return ', '.join(address_parts) if address_parts else "Adresse inconnue"
