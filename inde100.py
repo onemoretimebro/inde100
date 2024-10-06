@@ -3,7 +3,7 @@ eventlet.monkey_patch()  # Assurez-vous que ceci est exécuté en premier
 
 from flask import Flask, render_template
 from flask_socketio import SocketIO
-import requests
+import grequests  # Importation de grequests pour des requêtes asynchrones
 
 app = Flask(__name__)
 socketio = SocketIO(app)
@@ -42,10 +42,9 @@ def get_address(latitude, longitude, retry=0):
         headers = {
             'User-Agent': 'inde100/1.0 (https://inde100-lcm8.onrender.com/)'  
         }
-        response = requests.get(
-            f'https://nominatim.openstreetmap.org/reverse?lat={latitude}&lon={longitude}&format=json',
-            headers=headers
-        )
+        url = f'https://nominatim.openstreetmap.org/reverse?lat={latitude}&lon={longitude}&format=json'
+        req = grequests.get(url, headers=headers)
+        response = grequests.map([req])[0]  # Traiter la requête
 
         if response.status_code == 200:
             data = response.json()
