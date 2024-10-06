@@ -3,3 +3,5 @@ Flask-SocketIO
 eventlet
 gunicorn
 requests
+gevent>=1.4
+grequests
